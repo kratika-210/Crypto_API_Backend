@@ -1,21 +1,22 @@
 const cron = require('node-cron');
-const Crypto = require('../models/Crypto');  // Make sure to use the correct path for your model
+const Crypto = require('../models/Crypto');
 
-// Function to clean up records
+// Function to clean up old records and keep only the latest 10 for each coin
 async function cleanupRecords() {
     try {
-        // Find all distinct coins in the database
+        // Get all distinct coins from the database
         const coins = await Crypto.distinct('coin');
 
+        // Loop through each coin
         for (const coin of coins) {
-            // Fetch the total count of records for the given coin
+            // Get the total count of records for the current coin
             const totalRecords = await Crypto.countDocuments({ coin });
 
-            // If there are more than 10 records, delete the older ones
+            // If there are more than 10 records, delete the older ones to avoid storage flling
             if (totalRecords > 10) {
                 const recordsToDelete = totalRecords - 10;
 
-                // Delete the older records
+                // Delete the old records
                 await Crypto.deleteMany({
                     coin,
                     timestamp: { $lt: new Date(new Date().setDate(new Date().getDate() - recordsToDelete)) },
@@ -29,7 +30,7 @@ async function cleanupRecords() {
     }
 }
 
-// Schedule a cron job to run every 1 minute (can be adjusted)
+// Schedule a cron job to run every minute (can be adjusted as needed)
 cron.schedule('* * * * *', cleanupRecords);
 
 module.exports = cleanupRecords;

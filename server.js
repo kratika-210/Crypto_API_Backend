@@ -1,29 +1,31 @@
-const express=require('express');
-const app=express();
-const mongoose=require('mongoose');
-const fetchData=require('./tasks/fetchData');
-const cleanupData = require('./tasks/cleanupData'); 
+const express = require('express');
+const app = express();
+const mongoose = require('mongoose');
+const fetchData = require('./tasks/fetchData'); // Import the data fetching function
+const cleanupData = require('./tasks/cleanupData'); // Import the cleanup function
 
 require('dotenv').config();
-const dbURI=process.env.dbURI;
+const dbURI = process.env.dbURI; 
+
+// Database connection URI from environment variables
 mongoose.connect(dbURI)
-.then(()=>console.log("database connected"));
+    .then(() => console.log("Database connected"))
+    .catch(err => console.log("Error connecting to the database:", err));
 
-// Database
-app.use('/deleteCoin',require('./tasks/deleteData'))
-app.use('/api', require('./routes/api'));
-app.use(express.json());
+// Set up middleware
+app.use('/api', require('./routes/api')); // Use the API routes
+app.use(express.json()); // Enable JSON parsing for requests
 
-// Start the background job
+// Start the background job for fetching data
 fetchData();
 
-// Cleanup data on server start
-cleanupData();
-
-// Server
-app.listen(5010,()=>{
-    console.log(`server is running on port 5010`)
+// Start the server
+const PORT = 5010;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
-app.get('/',(req,res)=>{
-    res.send('hello to the crypto page')
-})
+
+// Default route
+app.get('/', (req, res) => {
+    res.send('Hello to the crypto page');
+});
